@@ -2,9 +2,21 @@
 // Link: https://www.codewars.com/kata/514b92a657cdc65150000006
 // Language: javascript
 // Kyu: 6 kyu
-function solution(number){ 
-  if (number < 0){
+function solution(number){
+  let numbers = []
+  for (let i = 0; i < number; i++) {
+    numbers.push(i)
+  }
+  let multiples = []
+  for (var j of numbers) {
+    if (j % 3 === 0 || j % 5 === 0) {
+      multiples.push(j)
+    } 
+  }
+  if (number < 0) {
     return 0
   } else {
-  return [...Array(Math.floor(number)+1).keys()].slice(0, -1).filter(num => num % 5 === 0 || num % 3 === 0).reduce((a, b) => a + b, 0)}
+    return multiples.reduce(function (a, b) {return a + b}, 0)
+  }
+  
 }
