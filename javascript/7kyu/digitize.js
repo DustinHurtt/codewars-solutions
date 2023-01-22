@@ -3,5 +3,7 @@
 // Language: javascript
 // Kyu: 7 kyu
 function digitize(n) {
-  return String(n).split('').map((el) => Number(el))
+
+  return Array.from(String(n), Number)
+  
 }
