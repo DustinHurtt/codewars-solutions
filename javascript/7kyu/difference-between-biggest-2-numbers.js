@@ -3,15 +3,17 @@
 // Language: javascript
 // Kyu: 7 kyu
 function diffBig2(arr) {
-  let max = 0
-  let secondMax = 0
-  for (let num of arr){
-    if (num > max){
-      secondMax = max
-      max = num
-    } else if (num > secondMax) {
-      secondMax = num
+  let first = 0
+  let second = 0
+  
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] > first) {
+      second = first;
+      first = arr[i];
+    } else if (arr[i] > second && arr[i] <= first) {
+      second = arr[i]
     }
-  }
-  return max - secondMax
+ } 
+  return first - second
+
 }
