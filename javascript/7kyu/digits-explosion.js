@@ -3,10 +3,11 @@
 // Language: javascript
 // Kyu: 7 kyu
 function explode(s) {
-  let arr = s.split('')
-  arr.forEach((digit) => {Number(digit)})
-  let multipleArr = arr.map((number) => {
-    return String(number).repeat(number)
-  })
-  return multipleArr.join('');
+
+ let exploded = ""
+ let strings = s.toString()
+ for (let i = 0; i < strings.length; i++){
+    exploded += strings[i].repeat(s[i])
+   }
+  return exploded
 }
