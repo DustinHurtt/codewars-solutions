@@ -3,11 +3,11 @@
 // Language: javascript
 // Kyu: 7 kyu
 function openOrSenior(data){
-  return data.map((element) => {
-    if (element[0] > 54 && element[1] > 7) {
-        return 'Senior'
-    } else {
-      return 'Open'
-    }
-  })
+return data.map((elem) => {
+  if (elem[0] > 54 && elem[1] > 7) {
+    return "Senior"
+  } else {
+    return "Open"
+  }
+})
 }
