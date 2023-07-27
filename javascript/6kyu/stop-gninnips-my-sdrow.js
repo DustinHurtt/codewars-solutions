@@ -3,5 +3,7 @@
 // Language: javascript
 // Kyu: 6 kyu
 function spinWords(string){
-  return string.split(' ').map((word) => word.length > 4 ? word.split('').reverse().join('') : word).join(' ')
+  
+  return string.split(' ').map((word) => word.length > 4 ? word.split('').reverse().join('') : word ).join(' ')
+
 }
