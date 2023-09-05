@@ -3,5 +3,7 @@
 // Language: javascript
 // Kyu: 8 kyu
 function opposite(number) {
-  return number/-1
+
+    return number * -1;
+
 }
