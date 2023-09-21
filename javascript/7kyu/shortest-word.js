@@ -3,5 +3,12 @@
 // Language: javascript
 // Kyu: 7 kyu
 function findShort(s){
-  return s.split(" ").map((word) => word.length).sort((a, b) => a - b)[0]
+  let arr = s.split(" ")
+  let shortest = arr[0]
+  arr.forEach((word) => {
+    if (word.length < shortest.length) {
+      shortest = word
+    }
+  })
+   return shortest.length
 }
