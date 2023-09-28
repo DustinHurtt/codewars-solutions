@@ -3,14 +3,5 @@
 // Language: javascript
 // Kyu: 7 kyu
 function accum(s) {
-
-//   let array = s.split('')
-  
-//   let secondArr = array.map((character, index) => {
-//     return character.toUpperCase() + character.toLowerCase().repeat(index)
-//   })
-//   secondArr.join('-')
-  
- return s.split('').map((el, i) => el.toUpperCase() + el.toLowerCase().repeat(i)).join('-')
-  
+	return s.split('').map((element, i) => element.toUpperCase() + element.toLowerCase().repeat(i)).join("-")
 }
