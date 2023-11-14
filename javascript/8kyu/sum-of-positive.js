@@ -3,12 +3,11 @@
 // Language: javascript
 // Kyu: 8 kyu
 function positiveSum(arr) {
-
-  return arr.reduce((acc, curr) => {
-    if (curr > 0) {
-      acc += curr
+  let sum = 0
+  arr.forEach((number) => {
+    if (number > 0) {
+      sum += number
     }
-    return acc
-  }, 0)
-  
-}
+  })
+  return sum
+} 
