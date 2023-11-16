@@ -3,5 +3,9 @@
 // Language: javascript
 // Kyu: 7 kyu
 function highAndLow(numbers){
-   return `${Math.max(...numbers.split(' '))} ${Math.min(...numbers.split(' '))}`
+    var arr = (numbers.toString().split(' ')).sort(function(a, b) {
+      return a - b;
+    });
+  
+  return String(arr[arr.length - 1]) + " " + String(arr[0])
 }
