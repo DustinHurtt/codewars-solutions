@@ -3,9 +3,15 @@
 // Language: javascript
 // Kyu: 7 kyu
 function XO(str) {
-  
-  let Ocounter = str.toLowerCase().replace(/[^o]+/g, '').length
-  let Xcounter = str.toLowerCase().replace(/[^x]+/g, '').length
-  
-  return Ocounter === Xcounter
+    let xArr = []
+    let oArr = []
+    for (let char of str) {
+      if (char === 'X' || char === 'x') {
+        xArr.push(char)
+      }
+      if (char === 'O' || char === 'o') {
+        oArr.push(char)
+      }
+    }
+    return xArr.length === oArr.length
 }
