@@ -3,5 +3,5 @@
 // Language: javascript
 // Kyu: 7 kyu
 function squareDigits(num){
-  return Number(String(num).split('').map((el) => el * el).join(''))
+  return Number(String(num).split('').map((element) => Number(element) ** 2).join(''))
 }
