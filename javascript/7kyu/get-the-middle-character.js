@@ -2,7 +2,13 @@
 // Link: https://www.codewars.com/kata/56747fd5cb988479af000028
 // Language: javascript
 // Kyu: 7 kyu
-function getMiddle(s) {
-  return s.length % 2 === 0 ? `${s[s.length/2-1]}${s[s.length/2]}` : `${s[Math.floor(s.length/2)]}`
-  
-  }
+function getMiddle(s)
+{
+ if (s.length % 2 === 0) {
+   let middleIndex = s.length / 2
+   return `${s[middleIndex -1 ]}${s[middleIndex]}`
+ } else {
+   let middleIndex = Math.ceil((s.length - 1) / 2)
+   return s[middleIndex]
+ }
+}
