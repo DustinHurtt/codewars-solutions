@@ -3,6 +3,5 @@
 // Language: javascript
 // Kyu: 7 kyu
 function filter_list(l) {
-  return l.filter((el) => typeof el !== "string")
-  // Return a new array with the strings filtered out
+  return l.filter((element) => typeof element !== "string")
 }
