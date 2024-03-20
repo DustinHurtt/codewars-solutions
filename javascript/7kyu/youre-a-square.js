@@ -3,5 +3,5 @@
 // Language: javascript
 // Kyu: 7 kyu
 var isSquare = function(n){
-  return Number.isInteger(Math.sqrt(n)); // fix me
+  return Math.round(Math.sqrt(n)) === Math.sqrt(n) ; // fix me
 }
