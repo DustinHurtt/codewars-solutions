@@ -3,7 +3,5 @@
 // Language: javascript
 // Kyu: 8 kyu
 function evenOrOdd(number) {
-  
-    return number % 2 === 0 ? "Even" : "Odd"
-  
-  }
+  return (number % 2 === 0) ? 'Even' : 'Odd'
+}
