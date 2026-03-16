@@ -352,7 +352,7 @@ if (SESSION) {
   const results = [];
   let hasNext = true;
   let pageCount = 0;
-  const maxPages = 20; // Safety limit: 83 solutions / 15 per page = ~6 pages, 20 is very safe
+  const maxPages = 50;
 
   while (hasNext && pageCount < maxPages) {
     pageCount++;
@@ -373,6 +373,11 @@ if (SESSION) {
       console.log(`Current URL: ${page.url()}`);
       throw err;
     }
+
+    // Record DOM node count BEFORE any load-more action so we can compare
+    // against it after — note this must be separate from pageEntries.length,
+    // which can be larger because one kata solved in N languages yields N entries.
+    const domCountBefore = await page.$$eval(".list-item-solutions", nodes => nodes.length);
 
     console.log("Extracting solutions...");
 
@@ -412,86 +417,51 @@ if (SESSION) {
 
     // Check for duplicates before adding (key = slug + language so that the
     // same kata solved in multiple languages is not treated as a duplicate)
-    const beforeCount = results.length;
     const existingKeys = new Set(results.map(r => `${r.slug}::${r.language}`));
     const newEntries = pageEntries.filter(e => !existingKeys.has(`${e.slug}::${e.language}`));
     
     if (newEntries.length === 0 && pageEntries.length > 0) {
-      console.log(`⚠️  All ${pageEntries.length} solutions on this page are duplicates. Stopping pagination.`);
+      console.log(`⚠️  All ${pageEntries.length} entries on this page are already collected. Stopping pagination.`);
       hasNext = false;
       break;
     }
     
     results.push(...newEntries);
-    console.log(`Found ${pageEntries.length} solutions on this page (${newEntries.length} new, ${pageEntries.length - newEntries.length} duplicates)`);
+    console.log(`Found ${pageEntries.length} entries on this page (${newEntries.length} new, ${pageEntries.length - newEntries.length} duplicates)`);
     console.log(`Total unique solutions: ${results.length}`);
 
-    // Try to load more solutions - Codewars uses "Load More" or infinite scroll
-    let loadedMore = false;
-    
-    // First, try to find a "Load More" button
-    const loadMoreSelectors = [
-      'button:has-text("Load More")',
-      'button:has-text("Show More")',
-      'a:has-text("Load More")',
-      'a:has-text("Show More")',
-      '.load-more',
-      '[data-action="load-more"]'
-    ];
-    
-    for (const selector of loadMoreSelectors) {
-      try {
-        const loadMoreBtn = await page.$(selector).catch(() => null);
-        if (loadMoreBtn) {
-          console.log(`Found "Load More" button with selector: ${selector}`);
-          await loadMoreBtn.click();
-          await sleep(2000);
-          loadedMore = true;
-          break;
-        }
-      } catch (e) {
-        // Continue to next selector
-      }
-    }
-    
-    // If no Load More button, try text-based search
-    if (!loadedMore) {
-      const btnFound = await page.evaluate(() => {
-        const buttons = Array.from(document.querySelectorAll('button, a'));
-        const loadMoreBtn = buttons.find(btn => {
-          const text = btn.textContent.trim().toLowerCase();
-          return text.includes('load more') || text.includes('show more') || text.includes('view more');
-        });
-        if (loadMoreBtn) {
-          loadMoreBtn.click();
-          return true;
-        }
-        return false;
+    // Scroll to the bottom to expose any "Load More" button or trigger lazy load
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+    // Try to click a "Load More" / "Show More" button using plain text matching
+    // (note: :has-text() is Playwright-only and does not work in Puppeteer)
+    const btnClicked = await page.evaluate(() => {
+      const candidates = Array.from(document.querySelectorAll('button, a'));
+      const btn = candidates.find(el => {
+        const text = el.textContent.trim().toLowerCase();
+        return text === "load more" || text === "show more" || text === "view more";
       });
-      
-      if (btnFound) {
-        console.log('Clicked "Load More" button via text search');
-        await sleep(2000);
-        loadedMore = true;
-      }
+      if (btn) { btn.click(); return true; }
+      return false;
+    });
+
+    if (btnClicked) {
+      console.log('Clicked "Load More" button.');
     }
-    
-    // If still no button, try scrolling to trigger lazy loading
-    if (!loadedMore) {
-      console.log('No "Load More" button found. Scrolling to trigger lazy load...');
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await sleep(1500);
-      
-      // Check if new solutions appeared after scrolling
-      const afterScrollCount = await page.$$eval(".list-item-solutions", nodes => nodes.length);
-      if (afterScrollCount > pageEntries.length) {
-        console.log(`Lazy loading worked! Found ${afterScrollCount - pageEntries.length} more solutions.`);
-        loadedMore = true;
-      }
+
+    // Poll for new DOM nodes to appear (up to ~10 seconds) rather than using
+    // a fixed sleep, which risks reading the DOM before new content arrives.
+    let domCountAfter = domCountBefore;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      await sleep(500);
+      domCountAfter = await page.$$eval(".list-item-solutions", nodes => nodes.length);
+      if (domCountAfter > domCountBefore) break;
     }
-    
-    if (!loadedMore) {
-      console.log(`No more solutions to load. Finished scraping.`);
+
+    if (domCountAfter > domCountBefore) {
+      console.log(`Loaded ${domCountAfter - domCountBefore} more solution card(s) (total DOM nodes: ${domCountAfter}).`);
+    } else {
+      console.log("No new solutions loaded. Finished scraping.");
       hasNext = false;
     }
   }
