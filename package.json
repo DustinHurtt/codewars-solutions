@@ -1,0 +1,23 @@
+{
+  "name": "codewars-exporter",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "codewars-solutions",
+  "main": "export-codewars-and-commit.js",
+  "scripts": {
+    "start": "node export-codewars-and-commit.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "dotenv": "^17.2.3",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7",
+    "process": "^0.11.10",
+    "puppeteer": "^24.23.0",
+    "slugify": "^1.6.6"
+  }
+}
