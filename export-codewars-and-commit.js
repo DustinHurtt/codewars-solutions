@@ -561,6 +561,94 @@ function commitEachFile(repoDir, filesWithDates) {
   }
 }
 
+async function writeReadme(repoDir, solutions) {
+  const dateStr = new Date().toISOString().split("T")[0];
+
+  // Group submissions by kata slug so each kata appears once in the table
+  const kataMap = new Map();
+  for (const s of solutions) {
+    if (!s.title || !s.slug) continue;
+    if (!kataMap.has(s.slug)) {
+      kataMap.set(s.slug, {
+        title: s.title,
+        kataUrl: s.kataUrl,
+        kyuText: s.kyuText || "",
+        languages: [],
+        completedAt: s.completedAt || "",
+      });
+    }
+    if (s.language && s.language !== "unknown") {
+      kataMap.get(s.slug).languages.push(s.language);
+    }
+  }
+  const katas = Array.from(kataMap.values());
+
+  // Language submission counts, sorted descending
+  const langCounts = new Map();
+  for (const s of solutions) {
+    if (!s.language || s.language === "unknown") continue;
+    langCounts.set(s.language, (langCounts.get(s.language) || 0) + 1);
+  }
+  const langsSorted = [...langCounts.entries()].sort((a, b) => b[1] - a[1]);
+
+  // Kyu counts, sorted numerically
+  const kyuCounts = new Map();
+  for (const k of katas) {
+    const kyu = k.kyuText || "unknown";
+    kyuCounts.set(kyu, (kyuCounts.get(kyu) || 0) + 1);
+  }
+  const kyusSorted = [...kyuCounts.entries()].sort((a, b) => {
+    const aNum = parseInt(a[0]) || 99;
+    const bNum = parseInt(b[0]) || 99;
+    return aNum - bNum;
+  });
+
+  const totalSubmissions = solutions.filter(s => s.language && s.language !== "unknown").length;
+
+  const lines = [
+    "# Codewars Solutions",
+    "",
+    `> Last exported: **${dateStr}**`,
+    "",
+    "## Summary",
+    "",
+    "| | Count |",
+    "|---|---|",
+    `| Unique katas solved | ${katas.length} |`,
+    `| Total language submissions | ${totalSubmissions} |`,
+    `| Languages used | ${langsSorted.length} |`,
+    "",
+    "## Languages",
+    "",
+    "| Language | Submissions |",
+    "|---|---|",
+    ...langsSorted.map(([lang, count]) => `| ${lang} | ${count} |`),
+    "",
+    "## By Difficulty",
+    "",
+    "| Kyu | Katas |",
+    "|---|---|",
+    ...kyusSorted.map(([kyu, count]) => `| ${kyu} | ${count} |`),
+    "",
+    "## All Solutions",
+    "",
+    "| Kata | Kyu | Languages | Completed |",
+    "|---|---|---|---|",
+    ...katas.map(k => {
+      const link = k.kataUrl ? `[${k.title}](${k.kataUrl})` : k.title;
+      const langs = k.languages.join(", ");
+      const date = k.completedAt ? k.completedAt.split("T")[0] : "";
+      return `| ${link} | ${k.kyuText} | ${langs} | ${date} |`;
+    }),
+    "",
+  ];
+
+  const readmePath = path.join(repoDir, "README.md");
+  await fs.promises.writeFile(readmePath, lines.join("\n"), "utf8");
+  console.log(`\nWrote README.md (${katas.length} katas, ${totalSubmissions} submissions, ${langsSorted.length} languages).`);
+  return { readmePath, katas: katas.length, submissions: totalSubmissions, languages: langsSorted.length, dateStr };
+}
+
 function push(repoDir) {
   // Create main if not exists
   try {
@@ -600,7 +688,17 @@ async function main() {
   initOrOpenRepo(path.resolve(OUTPUT_DIR), GIT_REPO_URL);
   commitEachFile(path.resolve(OUTPUT_DIR), filesWithDates);
 
-  // 4) Push
+  // 4) Write README and commit it with today's real date so the run shows
+  //    up on the GitHub contribution graph (no GIT_AUTHOR_DATE override)
+  const stats = await writeReadme(path.resolve(OUTPUT_DIR), solutions);
+  run("git", ["add", "README.md"], { cwd: path.resolve(OUTPUT_DIR) });
+  const readmeMsg = `Export ${stats.dateStr}: ${stats.katas} katas · ${stats.submissions} submissions · ${stats.languages} languages`;
+  const readmeRes = spawnSync("git", ["commit", "-m", readmeMsg], { cwd: path.resolve(OUTPUT_DIR), stdio: "inherit" });
+  if (readmeRes.status !== 0) {
+    console.warn("README unchanged since last export — no new commit needed.");
+  }
+
+  // 5) Push
   push(path.resolve(OUTPUT_DIR));
 
   console.log("\n" + "=".repeat(50));
